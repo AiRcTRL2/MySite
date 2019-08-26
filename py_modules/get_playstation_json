@@ -1,0 +1,23 @@
+import urllib3, json
+#
+# http = urllib3.PoolManager()
+# request = http.request('GET', 'Request URL:https://store.playstation.com/valkyrie-api/en/IE/999/faceted-search/{}%20{}?query={}%20{}&size=30&bucket=games&start=0')
+
+def get_playstation(game_name):
+    base_url = 'https://store.playstation.com/valkyrie-api/en/IE/999/faceted-search/'
+    query = '?query='
+    end_url = '&size=30&bucket=games&start=0'
+    fmt_game_name = game_name.replace(' ', '%20')
+    fmt_game_name = fmt_game_name.replace('-', '%20') + '?'
+
+    constructed_url = base_url + fmt_game_name + query + fmt_game_name + end_url
+
+    # initiate http request
+    http = urllib3.PoolManager()
+    request = http.request('GET', constructed_url)
+
+    obj = json.load(request)
+
+    return
+
+print(get_playstation("fifa 20"))

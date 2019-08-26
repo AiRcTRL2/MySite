@@ -17,8 +17,9 @@ def get_metadata(game_name, platform=None):
     if platform is None:
 
         # store for platform found
-        platforms = {}
+        platforms = dict()
         genres = set()
+        urls = dict()
         for platform in metacritic_platforms:
 
             # construct url
@@ -33,7 +34,7 @@ def get_metadata(game_name, platform=None):
 
             # check if we have received a not found error
             if response.status_code == 404:
-                platforms[platform] = "N/A"
+                platforms[platform] = False
 
             else:
                 # get game genre
@@ -51,5 +52,7 @@ def get_metadata(game_name, platform=None):
                     metascore = "Rating not currently available."
 
                 platforms[platform] = metascore
+                urls[platform] = url
 
-        return platforms, genres
+        return platforms, genres, urls
+

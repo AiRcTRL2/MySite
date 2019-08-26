@@ -12,7 +12,7 @@ def get_xbox_details(game_name):
     driver = webdriver.Chrome("../drivers/chromedriver.exe", options=options)
 
     # go to default xbox one page
-    driver.get("https://www.xbox.com/en-GB/games/xbox-one?xr=shellnav")
+    driver.get("https://www.xbox.com/en-IE/games/xbox-one?xr=shellnav")
 
     # wait for results to load
     time.sleep(3.5)
