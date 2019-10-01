@@ -1,50 +1,45 @@
-# from bs4 import BeautifulSoup
-# import time
-# from selenium import webdriver
-#
-#
-# def get_xbox_details(game_name):
-#     options = webdriver.ChromeOptions()
-#     options.add_argument('headless')
-#     options.add_argument('window-size=1920x1080')
-#
-#     # initialize the driver
-#     driver = webdriver.Chrome("../drivers/chromedriver.exe", options=options)
-#
-#     # go to default xbox one page
-#     driver.get("https://store.playstation.com/en-ie/home/games")
-#
-#     # wait for results to load
-#     time.sleep(3.5)
-#
-#     # define the search elements
-#     playstation_search_field = driver.find_element_by_class_name('search-text-box__input')
-#     playstation_search_button = driver.find_element_by_name('jetstream-search__search-button')
-#
-#     # get search name from function arg
-#     playstation_search_field.send_keys(game_name)
-#
-#     # perform search
-#     playstation_search_button.click()
-#
-#     driver.implicitly_wait(5)
-#
-#     # get all game div links for search results
-#     playstation_search_results = driver.find_elements_by_class_name('gameDivLink')
-#
-#     # empty dict to hold results
-#     game_results_parsed = {}
-#
-#     try:
-#         # parse each result and find game data
-#         for result in xbox_search_results:
-#             soup = BeautifulSoup(result.get_attribute('innerHTML'), 'html.parser')
-#             game_results_parsed[soup.find('h3').text] = [soup.find('img')['src'],
-#                                                          soup.find('span', {"class": "textpricenew"}).text]
-#         driver.close()
-#
-#     except AttributeError:
-#         driver.close()
-#         return 404
-#
-#     return game_results_parsed
+import urllib3, json
+import certifi
+from bs4 import BeautifulSoup
+
+
+def get_playstation(game_name):
+    url = 'https://store.playstation.com/en-ie/grid/search-game/1?query='
+
+    fmt_game_name = game_name.replace(' ', '%20')
+    fmt_game_name = fmt_game_name.replace('-', '%20')
+    constructed_url = url + fmt_game_name
+
+    # initiate http request
+    http = urllib3.PoolManager(
+        cert_reqs='CERT_REQUIRED',
+        ca_certs=certifi.where())
+
+    request = http.request('GET', constructed_url)
+
+    soup = BeautifulSoup(request.data, 'lxml')
+
+    game_titles = soup.findAll('div', {"class": "grid-cell__title"})
+    game_prices = soup.findAll('h3', {"class": "price-display__price"})
+    game_link = soup.findAll('span', {"class": "grid-cell__prices-container"})
+    game_image = soup.findAll('img', {"class": "product-image__img-main"})
+    game_product_type = soup.findAll('div', {"class": "grid-cell__left-detail--detail-2"})
+    game_psn_platform = soup.findAll('div', {"class": "grid-cell__left-detail--detail-1"})
+
+    playstation_store_results = {}
+
+    for result in range(0, (len(game_titles)-1)):
+        if "bundle" in game_product_type[result].text.lower() or "game" in game_product_type[result].text.lower():
+            dict = {}
+            dict['PSN Price'] = game_prices[result].text
+            dict['Product Type'] = game_product_type[result].text
+            dict['PSN Platform'] = game_psn_platform[result].text
+            dict['Image Location'] = game_image[result]['src'].replace("w=124&h=124", "w=1024")
+            dict['PSN Link'] = 'https://store.playstation.com/' + \
+                               game_link[result].findChild('a', {'class': 'internal-app-link'})['href']
+
+            playstation_store_results[game_titles[result].text.strip().replace(u'\xa0', u' ')] = dict
+
+    print(playstation_store_results)
+    return playstation_store_results
+
