@@ -2,6 +2,7 @@ from MySite.py_modules.get_metadata import *
 from MySite.py_modules.get_xbox import *
 from MySite.py_modules.goldmine import *
 from MySite.py_modules.set_database import *
+from MySite.py_modules.get_playstation import  *
 import datetime
 
 
@@ -14,13 +15,13 @@ class GameObject:
         and should resolve to an error if this is incorrect.
     """
 
-    def __init__(self, game_name, game_platform=None):
+    def __init__(self, game_name, game_img_loc=None):
         self.game_name = game_name
         self.game_rating = None
-        self.game_img_loc = None
+        self.game_img_loc = game_img_loc
         self.game_genres = None
-        self.game_platform = game_platform
-        self.game_cost_at_store = None
+        self.game_platform = None
+        # self.game_cost_at_store = None #to be removed, pricing script should be set up separately in order to check all stores
         self.game_found = False
         self.record_created = datetime.datetime.now().strftime("%Y/%m/%d")
         self.meta_critic_urls = None
@@ -33,64 +34,71 @@ class GameObject:
         fmt_game_name = fmt_game_name.replace(" ", "-")
         fmt_game_name = fmt_game_name.lower()
 
-        # send request to metacritic to get rating/
+        # send request to metacritic to get rating/genre/platforms
         data = get_metadata(fmt_game_name)
 
-        # set the objects values to return values from metacritic
+        # set the objects genres to values to returned from metacritic at index 1
         self.game_genres = list(data[1])
 
-        # cycle through tested platforms and find valid platforms
+        # cycle through tested platforms from the metacritic script and find valid platforms at index 0
         temp_list = []
         for platform in data[0]:
             if data[0][platform]:
                 temp_list.append(platform)
+        # set the valid platforms
         self.game_platform = temp_list
 
-        # game rating
+        if len(self.game_platform) == 0:
+            self.game_platform = "Platform information is not available for this title. Either it is unknown," \
+                                 " or this is not the base version of the game."
+
+        # game rating also contained at index 0 (can vary from platform to platform, so take all ratings)
         self.game_rating = data[0]
 
-        # first check if xbox is a valid platform
-        if 'Xbox One' in self.game_platform:
-            # send request to microsoft to get artwork / price at store
-            msoft_img_price = get_xbox_details(self.game_name)
-        else:
-            # This should not be here. Look to alternative platforms if Xbox is not a valid platform.
-            # ----------------- BUILD ABOVE SCRIPTS! important! ----------------------
-            msoft_img_price = None
-
-        # initialise msoft_img_price_lower
-        msoft_img_price_lower = None
-
-        # below occaisionally fails, but usually not twice in a row. If fail, try again
-        try:
-            msoft_img_price_lower = dict((key.lower(), value) for key, value in msoft_img_price.items())
-        except AttributeError:
-            self.fetch_failed = True
-            print("Error occurred with initial get_xbox_details query, thus except invalidated. Please send the"
-                  "request again")
-
-        if msoft_img_price_lower is not None:
-            for key in msoft_img_price_lower:
-                if self.game_name in key:
-                    # print(msoft_img_price_lower.get(key))
-                    self.game_img_loc = msoft_img_price_lower.get(key)[0]
-                    try:
-                        self.game_img_loc = self.game_img_loc.replace("h=300&w=200", "w=720")
-                    except:
-                        pass
-                    self.game_cost_at_store = msoft_img_price_lower.get(key)[1]
-                    self.game_name = key
-                    break
-        else:
-            print("The dictionary is empty.")
-
-        try:
-            self.game_name = self.game_name.strip(" pre-order")
-        except:
-            pass
-
-        # metacritic urls
+        # set the metacritic urls found at index 2
         self.meta_critic_urls = data[2]
+
+        # # first check if xbox is a valid platform
+        # if 'Xbox One' in self.game_platform:
+        #     # send request to microsoft to get artwork / price at store
+        #     msoft_img_price = get_xbox_details(self.game_name)
+        # else:
+        #     # This should not be here. Look to alternative platforms if Xbox is not a valid platform.
+        #     # ----------------- BUILD ABOVE SCRIPTS! important! ----------------------
+        #     msoft_img_price = None
+        #
+        # # initialise msoft_img_price_lower
+        # msoft_img_price_lower = None
+        #
+        # # below occaisionally fails, but usually not twice in a row. If fail, try again
+        # try:
+        #     msoft_img_price_lower = dict((key.lower(), value) for key, value in msoft_img_price.items())
+        # except AttributeError:
+        #     self.fetch_failed = True
+        #     print("Error occurred with initial get_xbox_details query, thus except invalidated. Please send the"
+        #           "request again")
+        #
+        # if msoft_img_price_lower is not None:
+        #     for key in msoft_img_price_lower:
+        #         if self.game_name in key:
+        #             # print(msoft_img_price_lower.get(key))
+        #             self.game_img_loc = msoft_img_price_lower.get(key)[0]
+        #             try:
+        #                 self.game_img_loc = self.game_img_loc.replace("h=300&w=200", "w=1080")
+        #             except:
+        #                 pass
+        #             self.game_cost_at_store = msoft_img_price_lower.get(key)[1]
+        #             self.game_name = key
+        #             break
+        # else:
+        #     print("The dictionary is empty.")
+        #
+        # try:
+        #     self.game_name = self.game_name.strip(" pre-order")
+        # except:
+        #     pass
+
+
 
     def get_game_data(self):
         print(self.game_name)
@@ -98,11 +106,13 @@ class GameObject:
         print(self.game_img_loc)
         print(self.game_genres)
         print(self.game_platform)
-        print(self.game_cost_at_store)
+        # print(self.game_cost_at_store)
         print(self.record_created)
         print(self.meta_critic_urls)
+        print()
+        print()
         return self.game_name, self.game_rating, self.game_img_loc, self.game_genres, self.game_platform,\
-            self.game_cost_at_store, self.record_created, self.meta_critic_urls
+            self.record_created, self.meta_critic_urls
 
     def queries(self):
 
