@@ -4,6 +4,8 @@ from fake_useragent import UserAgent
 
 # base urls for pulling metacritic data
 metacritic_platforms = {'Xbox One': "https://www.metacritic.com/game/xbox-one/",
+                        'Xbox 360': "https://www.metacritic.com/game/xbox-360/",
+                        'Playstation 3': "https://www.metacritic.com/game/playstation-3/",
                         'Playstation 4': "https://www.metacritic.com/game/playstation-4/",
                         'PC': "https://www.metacritic.com/game/pc/",
                         'Nintendo Switch': "https://www.metacritic.com/game/switch/"}
@@ -13,6 +15,7 @@ header = {'User-Agent': str(ua.chrome)}
 
 
 def get_metadata(game_name, platform=None):
+    session = requests.Session()
 
     if platform is None:
 
@@ -25,7 +28,7 @@ def get_metadata(game_name, platform=None):
             # construct url
             url = metacritic_platforms[platform] + game_name
             # send request
-            response = requests.get(url, headers=header)
+            response = session.get(url, headers=header)
 
             # parse the response html
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -49,7 +52,7 @@ def get_metadata(game_name, platform=None):
                 try:
                     metascore = soup.find('span', {"itemprop": "ratingValue"}).text
                 except AttributeError:
-                    metascore = "Rating not currently available."
+                    metascore = "Rating not currently available for this title."
 
                 platforms[platform] = metascore
                 urls[platform] = url
