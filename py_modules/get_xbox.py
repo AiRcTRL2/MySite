@@ -15,7 +15,7 @@ def get_xbox_details(game_name):
     driver.get("https://www.xbox.com/en-IE/games/xbox-one?xr=shellnav")
 
     # wait for results to load
-    time.sleep(3.5)
+    driver.implicitly_wait(12)
 
     # define the search elements
     xbox_search_field = driver.find_element_by_name('search-field')
@@ -26,10 +26,9 @@ def get_xbox_details(game_name):
     # get search name from function arg
     xbox_search_field.send_keys(game_name)
 
+    time.sleep(5)
     # perform search
     xbox_search_button.click()
-
-    time.sleep(1.05)
 
     # get all game div links for search results
     xbox_search_results = driver.find_elements_by_class_name('gameDivLink')
@@ -44,9 +43,10 @@ def get_xbox_details(game_name):
             game_results_parsed[soup.find('h3').text] = [soup.find('img')['src'],
                                                          soup.find('span', {"class": "textpricenew"}).text]
         driver.close()
-
-    except AttributeError:
-        driver.close()
-        return 404
+    finally:
+        pass
+    # except AttributeError:
+    #     driver.close()
+    #     return 404
 
     return game_results_parsed
