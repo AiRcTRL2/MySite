@@ -232,3 +232,16 @@ footer{
 /*    box-shadow: inset 4px 0px 7px -4px #505050;  Border right */
 
 }
+
+.search { 
+    width: 100%;
+    text-align: center;
+    margin-left: -2.5%;
+    margin-bottom:2.5%;
+}
+
+.search-bar {
+    width: 60%;
+    font-size:20px;
+    text-align:;
+}
