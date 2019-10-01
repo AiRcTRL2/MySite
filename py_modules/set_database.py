@@ -4,7 +4,7 @@ from mysql.connector import Error
 from mysql.connector import errorcode
 
 
-def send_to_db(query, vals=None, multi_result=False):
+def send_to_db(query,  multi_result=False, vals=None):
     # this function opens a database query for a connection
     # build engine for database
     db_engine = mysql.connector.connect(
